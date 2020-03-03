@@ -3,13 +3,15 @@
 <head>
 	<title></title>
   <script src="https://cdn.jsdelivr.net/npm/onnxjs/dist/onnx.min.js"></script>
+  <!-- <script src="https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/dist/face-api.js"></script> -->
+  <script src="face-api.js"></script>
+
 </head>
 <body>
 
 <video autoplay="true" id="videoElement" hidden>
 
 </video>
-
 <script type="text/javascript">
 	var video = document.querySelector("#videoElement");
 
@@ -25,13 +27,16 @@ if (navigator.mediaDevices.getUserMedia) {
 </script>
 
 <canvas id="c1" width="640" height="480"></canvas>
+<canvas id="c2" width="640" height="480"></canvas>
 
-<script type="text/javascript">
+<script type="module">
+// import * as faceapi from './face-api.js';
+
 var inputTensor=0
 var session=0
 	// var video = document.getElementById('video');
-	 var c1 = document.getElementById('c1');
-    var ctx1 = c1.getContext('2d');
+	var c1 = document.getElementById('c1');
+  var ctx1 = c1.getContext('2d');
 	async function setup(){
 
 
@@ -47,18 +52,59 @@ var session=0
   // dummy input tensor
      inputTensor = new onnx.Tensor(new Float32Array(3 * 224 * 224), 'float32', [1, 3, 224, 224]);
 	}
+async function facesetup(){
+
+const MODEL_URL = '/weight'
+
+await faceapi.loadSsdMobilenetv1Model(MODEL_URL)
+
+}
+
 setup();
+facesetup();
 async function run(){
 	var outputMap = await session.run([inputTensor]);
 	// console.log(outputMap)
 
 }
+console.log(faceapi.nets)
 
+let input;
+let input2;
+let detection;
+async function faceloop(){
+
+ input = document.getElementById('videoElement')
+ input2 = document.getElementById('c1')
+//  export interface ISsdMobilenetv1Options {
+//   // minimum confidence threshold
+//   // default: 0.5
+//   minConfidence?: number
+
+//   // maximum number of faces to return
+//   // default: 100
+//   maxResults?: number
+// }
+// const options = new faceapi.SsdMobilenetv1options({ minConfidence: 0.5 })
+
+let detections = await faceapi.detectAllFaces(input)
+const displaySize = { width: input2.width, height: input2.height }
+const resizedDetections = faceapi.resizeResults(detections, displaySize)
+faceapi.draw.drawDetections(input2, resizedDetections)
+
+
+// fullFaceDescriptions = faceapi.resizeResults(fullFaceDescriptions)
+// console.log(fullFaceDescriptions)
+// faceapi.draw.drawDetections(input, fullFaceDescriptions)
+
+
+}
 
 function intervalTimer() {
   ctx1.clearRect(0,0,640,480);
   ctx1.drawImage(video,0,0,640,480);
   run()
+  faceloop()
 
 }
 
@@ -78,7 +124,13 @@ function intervalTimer() {
 })()
 </script>
 
+<script type="text/javascript">
 
+
+
+
+
+</script>
 
 
 </body>
